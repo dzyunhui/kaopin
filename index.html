@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>年度考核测评系统</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">考</span>
+    <div>
+      <h1>年度考核测评系统</h1>
+      <p id="subTitle">共 0 名考核对象 · 5 项考核内容</p>
+    </div>
+  </div>
+  <div class="who" id="whoBox">
+    <span id="whoText">未登录</span>
+    <button class="link" id="btnLogout">退出</button>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-page="score">打分测评</button>
+  <button class="tab" data-page="result">得分汇总</button>
+  <button class="tab admin-only" data-page="admin">管理后台</button>
+</nav>
+
+<main>
+  <!-- 登录 -->
+  <section class="page active" id="page-login">
+    <div class="card login-card">
+      <h2>登录</h2>
+      <div class="login-modes">
+        <button class="mode active" data-mode="rater">打分人员</button>
+        <button class="mode" data-mode="admin">管理员</button>
+      </div>
+      <div class="field">
+        <label id="nameLabel">你的姓名</label>
+        <input id="loginName" type="text" maxlength="20" placeholder="请输入姓名">
+      </div>
+      <div class="field" id="pwdField" hidden>
+        <label>管理密码</label>
+        <input id="loginPwd" type="password" placeholder="默认 admin888">
+      </div>
+      <button class="btn primary block" id="btnLogin">进入系统</button>
+      <p class="tip">打分人员只需填姓名即可开始测评；管理后台可维护考核对象与考核内容。</p>
+    </div>
+  </section>
+
+  <!-- 打分 -->
+  <section class="page" id="page-score">
+    <div class="card">
+      <div class="field">
+        <label>选择考核对象</label>
+        <select id="personSelect"></select>
+      </div>
+      <div id="ratedTip" class="warn" hidden>你已对该对象打过分，本次提交将 <b>覆盖</b> 原有记录。</div>
+
+      <div class="table-wrap">
+        <table class="score-table" id="scoreTable">
+          <thead>
+            <tr>
+              <th style="width:26%">考核内容</th>
+              <th style="width:14%">分值(≤20)</th>
+              <th>备注（200字以内）</th>
+            </tr>
+          </thead>
+          <tbody id="scoreBody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3">
+                当前总分：<b id="totalScore">0</b> / <span id="maxTotal">100</span>
+                <span id="totalWarn" class="err" hidden>总分不能超过满分</span>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" id="btnSubmit">提交测评</button>
+        <button class="btn" id="btnReset">重置</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 汇总 -->
+  <section class="page" id="page-result">
+    <div class="card">
+      <div class="card-head">
+        <h2>得分汇总</h2>
+        <div class="actions">
+          <button class="btn primary admin-only" id="btnExport">导出 Excel</button>
+          <button class="btn" id="btnRefresh">刷新</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="sumTable">
+          <thead><tr id="sumHead"></tr></thead>
+          <tbody id="sumBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card admin-only">
+      <div class="card-head"><h2>打分明细</h2></div>
+      <div class="table-wrap">
+        <table id="detailTable">
+          <thead><tr id="detailHead"></tr></thead>
+          <tbody id="detailBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 管理后台 -->
+  <section class="page" id="page-admin">
+    <div class="card">
+      <div class="card-head">
+        <div class="subtabs">
+          <button class="subtab active" data-sub="persons">考核对象</button>
+          <button class="subtab" data-sub="items">考核内容</button>
+          <button class="subtab" data-sub="pwd">密码设置</button>
+        </div>
+      </div>
+
+      <div class="subpage active" id="sub-persons">
+        <div class="toolbar">
+          <button class="btn primary sm" id="btnAddPerson">新增人员</button>
+          <button class="btn sm" id="btnImport">Excel 导入</button>
+          <button class="btn sm" id="btnTpl">下载模板</button>
+          <button class="btn sm danger" id="btnClearPersons">清空人员</button>
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width:20%">姓名</th><th style="width:24%">职务</th><th>操作</th></tr></thead>
+            <tbody id="personBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subpage" id="sub-items">
+        <div class="toolbar">
+          <button class="btn primary sm" id="btnAddItem">新增考核项</button>
+          <button class="btn sm" id="btnResetItems">恢复默认五项</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width:26%">考核内容</th><th style="width:16%">满分</th><th>操作</th></tr></thead>
+            <tbody id="itemBody"></tbody>
+          </table>
+        </div>
+        <p class="tip">默认五项各 20 分，合计 100 分。修改后打分页与汇总表自动同步。</p>
+      </div>
+
+      <div class="subpage" id="sub-pwd">
+        <div class="field w300">
+          <label>新的管理密码</label>
+          <input id="newPwd" type="password" placeholder="至少 6 位">
+        </div>
+        <button class="btn primary" id="btnSavePwd">保存密码</button>
+        <p class="tip">修改后请用新密码登录管理后台。数据仅保存在本机浏览器中。</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-box">
+    <div class="modal-head"><h3 id="modalTitle">提示</h3><button class="close" id="modalClose">×</button></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="js/xlsx.full.min.js"></script>
+<script src="js/supabase.min.js"></script>
+<script src="js/cloud.js"></script>
+<script src="js/store.js"></script>
+<script src="js/validate.js"></script>
+<script src="js/excel.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
