@@ -7,7 +7,27 @@
     var t = $('toast'); t.textContent = msg; t.hidden = false;
     clearTimeout(t._t); t._t = setTimeout(function () { t.hidden = true; }, 2200);
   }
+  // 兜底：任何异常状态下都能把卡住的弹窗强制关掉
+  function forceHideModal() {
+    ['modal', 'confirmMask'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.hidden = true;
+        el.style.display = 'none';
+        el.classList.remove('show', 'on', 'active');
+      }
+    });
+    document.body.style.overflow = '';
+  }
+  if (typeof window !== 'undefined') window.forceHideModal = forceHideModal;
+
   function modal(title, bodyHtml, buttons) {
+    // 空内容 + 无按钮 = 无意义弹窗，直接吞掉（旧版本会弹一个关不掉的空白框）
+    if (!bodyHtml && (!buttons || !buttons.length)) {
+      forceHideModal();
+      toast('暂无可显示的内容');
+      return;
+    }
     // 容错：内容为空且未传按钮时，不显示空白弹窗（避免“只有标题和×”的空壳）
     var btns = buttons || [{ text: '关闭', cls: 'btn' }];
     var text = String(bodyHtml === undefined || bodyHtml === null ? '' : bodyHtml).trim();
@@ -26,7 +46,7 @@
     });
     $('modal').hidden = false;
   }
-  function closeModal() { $('modal').hidden = true; }
+  function closeModal() { forceHideModal(); }
 
   function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
 
@@ -340,7 +360,8 @@
     $('btnTpl').onclick = function () { Excel.buildTemplate(); toast('模板已下载'); };
     $('btnImport').onclick = function () { $('fileInput').value = ''; $('fileInput').click(); };
     $('fileInput').onchange = function (e) { var f = e.target.files && e.target.files[0]; if (f) doImport(f); };
-    $('modalClose').onclick = closeModal;
+    $('modalClose').onclick = function () { forceHideModal(); };
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') forceHideModal(); });
     $('modal').addEventListener('click', function (e) { if (e.target.id === 'modal') closeModal(); });
 
     // 云端状态指示：不配置 SDK 也安全，仅在登录页显示当前数据来源
