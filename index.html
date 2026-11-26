@@ -6,7 +6,46 @@
 <title>年度考核测评系统</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<div id="welcomeMask" hidden>
+  <img src="img/welcome.png" alt="欢迎使用党务管理系统" class="welcome-img">
+  <button type="button" id="welcomeClose" aria-label="关闭">×</button>
+</div>
+
+<style>
+#welcomeMask{position:fixed;inset:0;z-index:99999;display:flex;
+  align-items:center;justify-content:center;background:rgba(0,0,0,.45)}
+#welcomeMask[hidden]{display:none}
+.welcome-img{width:min(92vw,960px);height:auto;cursor:pointer;
+  box-shadow:0 8px 30px rgba(0,0,0,.25)}
+#welcomeClose{position:absolute;top:min(4vw,40px);right:min(4vw,40px);
+  width:36px;height:36px;line-height:1;font-size:26px;cursor:pointer;
+  background:transparent;border:1px solid #fff;color:#fff;border-radius:50%}
+</style>
+
+<script>
+(function(){
+  var KEY='kaopin_welcome_shown';
+  var mask=document.getElementById('welcomeMask');
+  if(!mask) return;
+  if(sessionStorage.getItem(KEY)) return;   // 本次会话已看过，不再弹
+
+  function close(){
+    mask.hidden=true;
+    document.body.style.overflow='';
+    sessionStorage.setItem(KEY,'1');
+  }
+  mask.querySelector('.welcome-img').addEventListener('click',close);
+  document.getElementById('welcomeClose').addEventListener('click',close);
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'&&!mask.hidden) close();
+  });
+
+  mask.hidden=false;
+  document.body.style.overflow='hidden';    // 锁滚动，防背景误点
+})();
+</script>
+   
+  <body>
 <header class="topbar">
   <div class="brand">
     <span class="logo">考</span>
