@@ -8,10 +8,17 @@
     clearTimeout(t._t); t._t = setTimeout(function () { t.hidden = true; }, 2200);
   }
   function modal(title, bodyHtml, buttons) {
-    $('modalTitle').textContent = title;
-    $('modalBody').innerHTML = bodyHtml;
+    // 容错：内容为空且未传按钮时，不显示空白弹窗（避免“只有标题和×”的空壳）
+    var btns = buttons || [{ text: '关闭', cls: 'btn' }];
+    var text = String(bodyHtml === undefined || bodyHtml === null ? '' : bodyHtml).trim();
+    if (!text && (!buttons || !buttons.length)) {
+      toast('暂无可显示的内容');
+      return;
+    }
+    $('modalTitle').textContent = title || '提示';
+    $('modalBody').innerHTML = text || '<p style="color:#6b7280">暂无内容</p>';
     var foot = $('modalFoot'); foot.innerHTML = '';
-    (buttons || [{ text: '关闭', cls: 'btn' }]).forEach(function (b) {
+    btns.forEach(function (b) {
       var el = document.createElement('button');
       el.className = b.cls || 'btn'; el.textContent = b.text;
       el.onclick = function () { if (b.onClick) b.onClick(); else closeModal(); };
@@ -335,6 +342,31 @@
     $('fileInput').onchange = function (e) { var f = e.target.files && e.target.files[0]; if (f) doImport(f); };
     $('modalClose').onclick = closeModal;
     $('modal').addEventListener('click', function (e) { if (e.target.id === 'modal') closeModal(); });
+
+    // 云端状态指示：不配置 SDK 也安全，仅在登录页显示当前数据来源
+    (function showCloudState() {
+      var tip = $('cloudTip');
+      if (!tip) return;
+      var render = function (text, color) {
+        tip.textContent = text;
+        tip.style.color = color || '';
+      };
+      try {
+        if (global.Store && Store.initCloud) {
+          Store.initCloud().then(function (m) {
+            if (m === 'cloud') render('● 云端共享：数据多人实时同步', '#16a34a');
+            else if (m === 'cloud-offline') render('● 离线：云端暂时不可用，显示本机缓存，恢复网络后自动重连', '#d97706');
+            else render('● 单机模式：数据仅存本机浏览器（未配置云端）', '#6b7280');
+          }, function () {
+            render('● 云端连接异常，已退回单机模式，详见控制台(F12)', '#dc2626');
+          });
+        } else {
+          render('● 单机模式：数据仅存本机浏览器', '#6b7280');
+        }
+      } catch (e) {
+        render('● 状态检测失败，按单机模式运行', '#6b7280');
+      }
+    })();
 
     go('login');
   });
