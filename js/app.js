@@ -22,29 +22,42 @@
   if (typeof window !== 'undefined') window.forceHideModal = forceHideModal;
 
   function modal(title, bodyHtml, buttons) {
-    // 空内容 + 无按钮 = 无意义弹窗，直接吞掉（旧版本会弹一个关不掉的空白框）
-    if (!bodyHtml && (!buttons || !buttons.length)) {
+    // 1) 参数纠偏：只在第一位传了正文时自动补标题
+    var t = title, body = bodyHtml, btns = buttons;
+    if ((body === undefined || body === null) && typeof t === 'string' &&
+        t.indexOf('提示') < 0 && (btns === undefined || !btns.length)) {
+      body = t; t = '提示';
+    }
+    var text = String(body === undefined || body === null ? '' : body).trim();
+
+    // 2) 空内容 = 无意义弹窗：不弹，只打印是谁调的，并强制清掉卡住的框
+    if (!text && (!btns || !btns.length)) {
+      if (window.console && console.warn) {
+        console.warn('[modal] 已拦截空白提示，调用位置：',
+          (new Error().stack || '').split('\n').slice(2, 5).join(' <- '));
+      }
       forceHideModal();
       toast('暂无可显示的内容');
-      return;
+      return false;
     }
-    // 容错：内容为空且未传按钮时，不显示空白弹窗（避免“只有标题和×”的空壳）
-    var btns = buttons || [{ text: '关闭', cls: 'btn' }];
-    var text = String(bodyHtml === undefined || bodyHtml === null ? '' : bodyHtml).trim();
-    if (!text && (!buttons || !buttons.length)) {
-      toast('暂无可显示的内容');
-      return;
-    }
-    $('modalTitle').textContent = title || '提示';
+
+    // 3) 正常渲染
+    $('modalTitle').textContent = t || '提示';
     $('modalBody').innerHTML = text || '<p style="color:#6b7280">暂无内容</p>';
     var foot = $('modalFoot'); foot.innerHTML = '';
-    btns.forEach(function (b) {
+    (btns || [{ text: '关闭', cls: 'btn' }]).forEach(function (b) {
       var el = document.createElement('button');
       el.className = b.cls || 'btn'; el.textContent = b.text;
       el.onclick = function () { if (b.onClick) b.onClick(); else closeModal(); };
       foot.appendChild(el);
     });
     $('modal').hidden = false;
+    $('modal').style.display = '';
+
+    // 4) 保险：4 秒后必定关闭，杜绝"关不掉的框"
+    clearTimeout(modal._t);
+    modal._t = setTimeout(closeModal, 4000);
+    return true;
   }
   function closeModal() { forceHideModal(); }
 
@@ -373,8 +386,10 @@
         tip.style.color = color || '';
       };
       try {
+        if (window.console && console.log) console.log('[cloud] 开始检测云端连接…');
         if (global.Store && Store.initCloud) {
           Store.initCloud().then(function (m) {
+            if (window.console && console.log) console.log('[cloud] 检测结果：', m);
             if (m === 'cloud') render('● 云端共享：数据多人实时同步', '#16a34a');
             else if (m === 'cloud-offline') render('● 离线：云端暂时不可用，显示本机缓存，恢复网络后自动重连', '#d97706');
             else render('● 单机模式：数据仅存本机浏览器（未配置云端）', '#6b7280');

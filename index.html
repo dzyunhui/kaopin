@@ -7,16 +7,17 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <div id="welcomeMask" hidden>
-  <img src="img/welcome.png" alt="欢迎使用党务管理系统" class="welcome-img">
+  <img src="img/welcome.jpg" alt="欢迎使用党务管理系统" class="welcome-img"
+       onerror="this.style.display='none'">
   <button type="button" id="welcomeClose" aria-label="关闭">×</button>
 </div>
 
 <style>
 #welcomeMask{position:fixed;inset:0;z-index:99999;display:flex;
   align-items:center;justify-content:center;background:rgba(0,0,0,.45)}
-#welcomeMask[hidden]{display:none}
-.welcome-img{width:min(92vw,960px);height:auto;cursor:pointer;
-  box-shadow:0 8px 30px rgba(0,0,0,.25)}
+#welcomeMask[hidden]{display:none!important}
+.welcome-img{width:min(70vw,640px);max-width:92vw;height:auto;cursor:pointer;
+  border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.25);background:#fff}
 #welcomeClose{position:absolute;top:min(4vw,40px);right:min(4vw,40px);
   width:36px;height:36px;line-height:1;font-size:26px;cursor:pointer;
   background:transparent;border:1px solid #fff;color:#fff;border-radius:50%}
@@ -27,21 +28,26 @@
   var KEY='kaopin_welcome_shown';
   var mask=document.getElementById('welcomeMask');
   if(!mask) return;
-  if(sessionStorage.getItem(KEY)) return;   // 本次会话已看过，不再弹
-
+  var img=mask.querySelector('.welcome-img');
+  var btn=document.getElementById('welcomeClose');
   function close(){
     mask.hidden=true;
+    mask.style.display='none';
     document.body.style.overflow='';
-    sessionStorage.setItem(KEY,'1');
+    try{ sessionStorage.setItem(KEY,'1'); }catch(e){}
+    document.removeEventListener('keydown',onKey);
   }
-  mask.querySelector('.welcome-img').addEventListener('click',close);
-  document.getElementById('welcomeClose').addEventListener('click',close);
-  document.addEventListener('keydown',function(e){
-    if(e.key==='Escape'&&!mask.hidden) close();
-  });
-
+  function onKey(e){ if(e.key==='Escape'&&!mask.hidden) close(); }
+  // 遮罩任意位置 / 图片 / × / Esc 都能关；图片加载失败也不会卡住
+  mask.addEventListener('click',close);
+  if(img) img.addEventListener('click',close);
+  if(btn) btn.addEventListener('click',function(e){ e.stopPropagation(); close(); });
+  document.addEventListener('keydown',onKey);
+  try{ if(sessionStorage.getItem(KEY)) return; }catch(e){}
   mask.hidden=false;
-  document.body.style.overflow='hidden';    // 锁滚动，防背景误点
+  mask.style.display='flex';
+  document.body.style.overflow='hidden';
+  setTimeout(close,6000);
 })();
 </script>
    
@@ -84,7 +90,7 @@
         <input id="loginPwd" type="password" placeholder="默认 admin888">
       </div>
       <button class="btn primary block" id="btnLogin">进入系统</button>
-      <p class="tip" id="cloudTip">正在检测云端连接…</p>
+      <p class="tip" id="cloudTip">正在检测云端连接…（若长时间不变，请按 F12 看控制台）</p>
       <p class="tip">打分人员只需填姓名即可开始测评；管理后台可维护考核对象与考核内容。</p>
     </div>
   </section>
