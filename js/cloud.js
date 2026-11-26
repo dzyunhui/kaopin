@@ -13,8 +13,8 @@
   'use strict';
 
   // ===== 在此填入你的 Supabase 项目配置（可留空，留空即本地单机模式） =====
-  var SUPABASE_URL = '';
-  var SUPABASE_ANON_KEY = '';
+  var SUPABASE_URL = 'https://dyvfnkgnztmncgobwiqj.supabase.co';
+  var SUPABASE_ANON_KEY = 'sb_publishable_PdfG-Tf0Fa5IMOuiIFCbpg_mo7aEShC';
   // ==========================================================
 
   var TABLE = 'kaopin_state';
